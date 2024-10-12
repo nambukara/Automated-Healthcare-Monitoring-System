@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>PulseMind</title>
+	<link rel="icon" href="Screenshot 2024-08-18 095356.png" type="png">
+	<link rel="stylesheet" href="styles.css">
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>     <!-- jQuery library -->
+
+	<script>
+        // Function to fetch the latest record
+        function fetchLatestRecord() {    //fetching the latest record from the server.
+            $.ajax({
+                url: 'reyaltime.php',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    $('#latest-testid').text(data.testid);
+                    $('#latest-temp').text(data.temp);
+                    $('#latest-heartrate').text(data.heartrate);
+                    $('#latest-stressindex').text(data.stressindex);
+                    $('#latest-date').text(data.date);
+                    $('#latest-time').text(data.time);
+                    
+                    // Check if temperature >35
+                    if (parseFloat(data.temp) > 37) {
+                        $('#latest-temp').css('color', 'red');  //  text color to red
+                    } else {
+                        $('#latest-temp').css('color', '');    // Restext colort to default color
+                    }
+
+                    // Check heartrate <100
+                    if (parseFloat(data.heartrate) > 95) {
+                        $('#latest-heartrate').css('color', 'red');  //  text color to red
+                    }else if (parseFloat(data.heartrate) <60) {
+                        $('#latest-heartrate').css('color', 'red');  //  text color to red 
+                    }else {
+                        $('#latest-heartrate').css('color', '');    // text color to default color
+                    }
+                }
+            });
+        }
+
+        // Fetch the latest record every 5 seconds 
+        setInterval(fetchLatestRecord, 5000);
+
+        // Fetch the latest record the page loads
+        $(document).ready(function() {
+            fetchLatestRecord();
+        });
+    </script>
+
+</style>
+<!-- Include Chart.js and jQuery from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>       <!-- Used to plot the data.-->>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<style> 
+    .image {  
+        width:30%;
+        align:left; 
+        shadow: 0 5px 20px rgba(32, 103, 246,20);
+    } 
+
+    
+</style> 
+</head>
+
+
+
+<body>
+	<img src="logo.png" alt="Snow" style="width:30%" align="left">
+	<a href="data.php">
+		<img class="image" src="database_i.webp" alt="dtatbase" style="width:8%" align="right" >
+	</a>
+
+	<br><br><br><br>
+
+
+
+
+	<div class="data-head">Mental Health Monitoring System</div>
+
+
+
+	<div class="data-main">  
+		<div class="data-item">
+			<h2>Pulse rate</h2>
+			<p class="value" id="Pulse rate">
+                <span id="latest-heartrate">  <!-- pdated with real-time data from the AJAX requests-->
+                    ...</span>BPM</p> 
+		</div>
+        <div class="data-item">
+			<h2>Temperature</h2>
+			<p class="value" id="temperature">
+                <span id="latest-temp"> <!-- pdated with real-time data from the AJAX requests-->
+                    ...</span> &#8451;</p>
+		</div>
+		<div class="data-item">
+			<h2>Stress index</h2>
+			<p class="value" id="Stress index">
+                <span id="latest-stressindex"> <!-- pdated with real-time data from the AJAX requests-->
+                    ...</span></p>
+		</div>
+	</div>
+       
+
+
+
+        
+
+
+
+
+
+
+    <div class="chart-main">
+        <div>
+            <canvas id="stressIndexChart" width="600" height="400"></canvas> <!--create chart using Chart.js-->
+        </div>
+    </div>
+
+
+    <div class="chart-main">
+        <div>
+            <canvas id="pulseRateChart" width="600" height="400"></canvas> <!--create chart using Chart.js-->
+        </div>
+        <div>
+            <canvas id="temperatureChart" width="600" height="400"></canvas> <!--create chart using Chart.js-->
+        </div>
+    </div>
+    
+    
+
+    <script>
+        // Pulse Rate Chart
+        const pulseCtx = document.getElementById('pulseRateChart').getContext('2d');
+        const pulseRateChart = new Chart(pulseCtx, {
+            type: 'line',
+            data: {
+                labels: [],  // Initial labels will be empty, filled dynamically
+                datasets: [{
+                    label: 'Pulse Rate',
+                    borderColor: '#00BFFF',
+                    data: [],  // Initial data will be empty, filled dynamically
+                    fill: false,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Pulse Rate (bpm)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Temperature Chart
+        const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+        const temperatureChart = new Chart(tempCtx, {
+            type: 'line',
+            data: {
+                labels: [],  // Initial labels will be empty, filled dynamically
+                datasets: [{
+                    label: 'Temperature (°C)',
+                    borderColor: '#FF6347',
+                    data: [],  // Initial data will be empty, filled dynamically
+                    fill: false,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(2); //  temperature values shown with 2 decimal places
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Stress Index Chart
+const stressCtx = document.getElementById('stressIndexChart').getContext('2d');
+const stressIndexChart = new Chart(stressCtx, {
+    type: 'line',
+    data: {
+        labels: [],  // Initial labels will be empty, filled dynamically
+        datasets: [{
+            label: 'Stress Index',
+            borderColor: '#32CD32',
+            data: [],  // Initial data will be empty, filled dynamically
+            fill: false,
+            borderWidth: 2
+        }]
+    },
+    options: {
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Time'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Stress Index'
+                }
+            }
+        }
+    }
+});
+
+        
+        // Function to fetch real-time data from the server
+function fetchRealTimeData() {
+    $.ajax({
+        url: 'fetch_data.php',  // last 10 data points in JSON format use php file
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            const labels = data.map(row => row.time);
+            const pulseRates = data.map(row => row.heartrate);
+            const temperatures = data.map(row => row.temp);
+            const stressIndexes = data.map(row => row.stressindex);  // Include stress index data
+
+            pulseRateChart.data.labels = labels;
+            pulseRateChart.data.datasets[0].data = pulseRates;
+            pulseRateChart.update();
+
+            temperatureChart.data.labels = labels;
+            temperatureChart.data.datasets[0].data = temperatures;
+            temperatureChart.update();
+
+            stressIndexChart.data.labels = labels;  // Use the same time labels
+            stressIndexChart.data.datasets[0].data = stressIndexes;
+            stressIndexChart.update();
+        },
+        error: function(xhr, status, error) {
+            console.log('Error fetching real-time data:', error);
+        }
+    });
+}
+
+// refresh 2 seconds
+setInterval(fetchRealTimeData, 2000);
+
+// Initial fetch
+fetchRealTimeData();
+</script>
+
+
+</body>
+</html>
